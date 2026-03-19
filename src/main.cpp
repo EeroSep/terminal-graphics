@@ -35,7 +35,7 @@ int main() {
     notcurses_term_dim_yx(nc, &term_height, &term_width);
 
     // Model transformation
-    Mat4 model = rotationXYZ(0.5f, 0.5f, 0.0f) *
+    Mat4 model = rotationXYZ(0.2f, 0.1f, 0.0f) *
                  scaling(1.0f, 1.0f, 1.0f) *
                  translation(0.0f, 0.0f, 0.0f);
 
@@ -50,32 +50,30 @@ int main() {
         Vec4(0.5f, 0.5f, 0.5f, 1.0f),
         Vec4(-0.5f, 0.5f, 0.5f, 1.0f)
     };
-    nccell* c;
-    nccell_init(c);                 
-    nccell_load_ucs32(nullptr, c, U'█');
-    nccell_set_fg_default(c);       
-    nccell_set_bg_default(c);
+    nccell c;                       
+    nccell_init(&c);                  
+    nccell_load_ucs32(nullptr, &c, U'*');
+    nccell_set_fg_default(&c);
+    nccell_set_bg_default(&c);
+    struct ncplane* n = notcurses_stdplane(nc);
+    ncplane_set_fg_rgb(n, 0xffffff);
     // Main loop
+    float rotx = 0.0f, roty = 0.0f;
     for(;;) {
-        struct ncplane* n = notcurses_stdplane(nc);
-
-        // Transform vertices
+        ncplane_erase(n);
+        model = rotationXYZ(rotx += 0.1f, roty += 0.05f, 0.0f) *
+                 scaling(1.0f, 1.0f, 1.0f) *
+                 translation(0.0f, 0.0f, 0.0f);
         for(auto& v : cube) {
             Vec4 vt = model * v;
-            Vec3 projected(vt);  // divide by w
+            Vec3 projected(vt);  
             ScreenPos p = project(projected, term_width, term_height);
 
             if(p.x >= 0 && p.x < (int)term_width && p.y >= 0 && p.y < (int)term_height) {
-                ncplane_putc_yx(n, p.y, p.x, c);  // correct signature
+                ncplane_putc_yx(n, p.y, p.x, &c); 
             }
         }
-
         notcurses_render(nc);
-
-        // Clear plane for next frame
-        ncplane_erase(n);
-
-        // Simple frame delay
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 

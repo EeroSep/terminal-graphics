@@ -1,5 +1,5 @@
 #pragma once
-#include "Vec4.h"
+class Vec4;
 
 class Vec3 {
 public:
