@@ -7,3 +7,13 @@ Vec4::Vec4(const Vec3& vec3, float w) : x(vec3.x), y(vec3.y), z(vec3.z), w(w) {}
 const float* Vec4::getData() const {
     return &x;
 }
+
+void Vec4::ndc() {
+    if(w != 0) {
+        x /= w;
+        y /= w;
+        z /= w;
+        w = 1.0f;
+    }
+}
+    

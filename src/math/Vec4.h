@@ -8,4 +8,5 @@ public:
     Vec4(const Vec3& vec3, float w);
     const float* getData() const;
     float x, y, z, w;
+    void ndc();
 };

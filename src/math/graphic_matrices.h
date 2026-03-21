@@ -61,3 +61,24 @@ Mat4 rotationXYZ(float angleX, float angleY, float angleZ) {
 
     return rotZ * rotY * rotX;
 }
+
+Mat4 perspective(float fov, float aspect, float near, float far) {
+    float f = 1.0f / tanf(fov / 2.0f);
+    float m[16] = {
+        f / aspect, 0.0f, 0.0f,  0.0f, 
+        0.0f,       f,    0.0f,  0.0f,
+        0.0f,       0.0f, -(far + near) / (far - near), -(2 * far * near) / (far - near),
+        0.0f,       0.0f, -1.0f, 0.0f
+    };
+    return Mat4(m);
+}
+
+Mat4 viewport(int w, int h) {
+    float m[16] = {
+        w / 2.0f, 0.0f,   0.0f, w / 2.0f,
+        0.0f,   -h / 2.0f, 0.0f, h / 2.0f,
+        0.0f,    0.0f,   0.5f, 0.5f,
+        0.0f,    0.0f,   0.0f, 1.0f
+    };
+    return Mat4(m);
+}
