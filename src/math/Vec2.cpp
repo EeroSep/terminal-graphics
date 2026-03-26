@@ -11,6 +11,17 @@ float Vec2::length() const {
 
 float Vec2::angle(const Vec2& other) const {
     float dot = this->dot(other);
-    return acos(dot / other.length()*this->length());
+    return acos(dot / (other.length() * this->length()));
 }
 
+Vec2 Vec2::operator-(const Vec2& other) const {
+    return Vec2(x - other.x, y - other.y);
+}
+
+Vec2 Vec2::operator+(const Vec2& other) const {
+    return Vec2(x + other.x, y + other.y);
+}
+
+Vec2 Vec2::operator*(float scalar) const {
+    return Vec2(x * scalar, y * scalar);
+}

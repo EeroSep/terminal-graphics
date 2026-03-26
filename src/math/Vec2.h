@@ -8,6 +8,9 @@ public:
     float dot(const Vec2& other) const;
     float length() const;
     float angle(const Vec2& other) const;
+    Vec2 operator-(const Vec2& other) const;
+    Vec2 operator+(const Vec2& other) const;
+    Vec2 operator*(float scalar) const;
     
     float x, y;
 };
