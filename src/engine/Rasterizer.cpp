@@ -6,8 +6,8 @@ void Rasterizer::init_framebuffer(int width, int height) {
     fb = new Framebuffer(width, height);
 }
 
-Rasterizer::Rasterizer(int width, int height) :fb(nullptr) {
-    init_framebuffer(width, height);
+Rasterizer::Rasterizer() {
+
 }
 
 Rasterizer::~Rasterizer() {
@@ -22,4 +22,16 @@ void Rasterizer::rasterize_triangle(const Vec2& v0, const Vec2& v1, const Vec2& 
     maxy = std::min(std::max({v0.y, v1.y, v2.y}), (float)(fb->getHeight()));
 
     // WIP, decided to work on framebuffer first
+}
+
+void Rasterizer::draw(Framebuffer& fb, const Camera& camera, Object& obj) {
+    // WIP
+}
+
+void Rasterizer::viewMatrix(const Vec3& eye, const Vec3& center, const Vec3& up) {
+    // WIP
+}
+
+void Rasterizer::projectionMatrix(float fov, float aspect, float near, float far) {
+    // WIP
 }

@@ -1,20 +1,22 @@
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <chrono>
 #include <notcurses/notcurses.h>
 #include "math/Mat4.h"
 #include "math/Vec4.h"
 #include "math/Vec3.h"
 #include "math/graphic_matrices.h"
-#include <thread>
-#include <chrono>
 #include "engine/Framebuffer.h"
 #include "engine/Rasterizer.h"
-#include "Camera.h"
+#include "engine/Camera.h"
+#include "engine/Renderer.h"
+#include "engine/Object.h"
 
-struct Object {
-    std::vector<Vec4> vertices;
-    Mat4 model;
-    std::vector<Vec3> faces;
+struct GlobalState {
+    float deltaTime;
+    float lastFrameTime;
+    struct notcurses* nc;
 };
 
 std::vector<Object> loadObjs() {
@@ -39,10 +41,17 @@ std::vector<Object> loadObjs() {
         Vec3(0, 3, 7), Vec3(0, 7, 4)  // Left face
     };
     // TODO load everything from obj folder
+    // ? Obj class with loading function instead of struct ? 
     return {cube};
 }
 
 int main() {
-
+    // Complete refactor in progress
+    std::vector<Object> scene = loadObjs();
+    Renderer renderer;
+    Rasterizer rasterizer;
+    while (true) {
+        
+    }
     return 0;
 }

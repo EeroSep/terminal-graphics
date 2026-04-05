@@ -10,7 +10,8 @@ class Framebuffer {
     int getHeight() const { return height; }
     void clear(); 
     bool test_and_set(int x, int y, float depth, unsigned int color); 
-
+    const unsigned int* getColorBuffer() const { return color_buffer.data(); }
+    
     private:
     int width, height;
     std::vector<unsigned int> color_buffer;
