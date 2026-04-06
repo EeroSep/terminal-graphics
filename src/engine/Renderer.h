@@ -1,12 +1,13 @@
 #pragma once
+#include "Framebuffer.h"
 
 class Renderer
 {
 public:
-    Renderer();
+    Renderer(struct notcurses* nc);
     ~Renderer();
 
-    void Render(const Framebuffer& fb);
+    void Render(const Framebuffer* fb);
     void Clear();
     void calculateDimensions();
     void setBlitter(ncblitter_e blitter) { blit = blitter; }

@@ -1,13 +1,8 @@
 #include "Renderer.h"
 #include <notcurses/notcurses.h>
 
-Renderer::Renderer() {
-    struct notcurses_options opts{};
-    nc = notcurses_init(&opts, stdout);
-    if (!nc) {
-        std::cerr << "Failed to initialize notcurses\n";
-        exit(1);
-    }
+Renderer::Renderer(struct notcurses* nc) : nc(nc) {
+
     notcurses_term_dim_yx(nc, &term_height, &term_width);
     pl = notcurses_stdplane(nc);
     ncplane_set_fg_rgb(pl, 0xffffff);
@@ -20,8 +15,8 @@ Renderer::~Renderer() {
 void Renderer::Clear() {
     ncplane_erase(pl);
 }
-void Renderer::render(const Framebuffer& fb) {
-    ncblit_rgba(fb.getColorBuffer(), ); // !!!!!
+void Renderer::render(const Framebuffer* fb) {
+    ncblit_rgba(fb->getColorBuffer(), ); // !!!!!
     notcurses_render(nc);
 }
 void Renderer::checkTermSize() {

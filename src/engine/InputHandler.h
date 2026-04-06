@@ -8,5 +8,7 @@ public:
 
     void processInput();
 private:
-    struct notcurses& nc;
+    struct notcurses* nc;
 };
+
+// WIP

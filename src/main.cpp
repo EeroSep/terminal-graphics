@@ -16,8 +16,11 @@
 struct GlobalState {
     float deltaTime;
     float lastFrameTime;
-    struct notcurses* nc;
+    struct notcurses_options opts{};
+    struct notcurses* nc = notcurses_init(&opts, stdout);
 };
+std::unique_ptr<GlobalState> gs;
+
 
 std::vector<Object> loadObjs() {
     //Hardcoded cube :D
@@ -42,13 +45,16 @@ std::vector<Object> loadObjs() {
     };
     // TODO load everything from obj folder
     // ? Obj class with loading function instead of struct ? 
-    return {cube};
+    std::vector<Object> objects;
+    objects.push_back(cube);
+    return objects;
 }
 
 int main() {
+    
     // Complete refactor in progress
     std::vector<Object> scene = loadObjs();
-    Renderer renderer;
+    Renderer renderer(gs.nc);
     Rasterizer rasterizer;
     while (true) {
         
