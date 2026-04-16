@@ -43,10 +43,10 @@ std::vector<Object> loadObjs() {
         Vec3(1, 2, 6), Vec3(1, 6, 5), // Right face
         Vec3(0, 3, 7), Vec3(0, 7, 4)  // Left face
     };
-    // TODO load everything from obj folder
-    // ? Obj class with loading function instead of struct ? 
     std::vector<Object> objects;
     objects.push_back(cube);
+    Object monkey = Object::loadFromFile("assets/monkey.obj");
+    objects.push_back(monkey);
     return objects;
 }
 

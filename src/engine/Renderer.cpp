@@ -16,7 +16,7 @@ void Renderer::Clear() {
     ncplane_erase(pl);
 }
 void Renderer::render(const Framebuffer* fb) {
-    ncblit_rgba(fb->getColorBuffer(), ); // !!!!!
+    ncblit_rgba(fb->getColorBuffer(), fb->getWidth(), fb->getHeight(), &blit); // !!!!!
     notcurses_render(nc);
 }
 void Renderer::checkTermSize() {
