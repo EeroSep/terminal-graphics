@@ -5,7 +5,7 @@
 
 class Framebuffer {
     public:
-    Framebuffer(unsigned int width, unsigned int height) : width(width), height(height) {}; 
+    Framebuffer(unsigned int width, unsigned int height);
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
     void resize(unsigned int new_width, unsigned int new_height);

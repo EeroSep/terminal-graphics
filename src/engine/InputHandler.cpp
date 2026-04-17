@@ -7,12 +7,12 @@ InputHandler::InputHandler(struct notcurses* nc) : nc(nc) {}
 InputHandler::~InputHandler() {}
 
 std::vector<uint32_t> InputHandler::processInput() {
-    std::vector<uint32_t> inputs(5);
+    std::vector<uint32_t> inputs;
     struct ncinput ni;
     struct timespec ts = { .tv_sec = 0, .tv_nsec = 0};
     uint32_t input;
-    while ((input = notcurses_get(nc, &ni, &ts)) != 0) {
-        if (id == (uint32_t)-1) break; 
+    while ((input = notcurses_get(nc, &ts, &ni)) != 0) {
+        if (input == (uint32_t)-1) break; 
         switch (input) {
             case NCKEY_UP:
                     inputs.push_back(NCKEY_UP);
@@ -29,17 +29,29 @@ std::vector<uint32_t> InputHandler::processInput() {
             case NCKEY_SPACE:
                     inputs.push_back(NCKEY_SPACE);
                 break;
-            case NCKEY_W:
-                    inputs.push_back(NCKEY_W);
+            case 'w':
+                    inputs.push_back('w');
                 break;
-            case NCKEY_A:
-                    inputs.push_back(NCKEY_A);
+            case 'a':
+                    inputs.push_back('a');
                 break;
-            case NCKEY_S:
-                    inputs.push_back(NCKEY_S);
+            case 's':
+                    inputs.push_back('s');
                 break;
-            case NCKEY_D:
-                    inputs.push_back(NCKEY_D);
+            case 'd':
+                    inputs.push_back('d');
+                break;
+            case 'W':
+                    inputs.push_back('w');
+                break;
+            case 'A':
+                    inputs.push_back('a');
+                break;
+            case 'S':
+                    inputs.push_back('s');
+                break;
+            case 'D':
+                    inputs.push_back('d');
                 break;
             default:
                 break;

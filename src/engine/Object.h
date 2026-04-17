@@ -7,8 +7,8 @@
 
 class Object {
 public:
-    Object();
-    void loadFromFile(const std::string& filename);
+    Object(std::vector<Vec4> vertices, std::vector<Vec3> faces);
+    void loadFromFile(const std::string& filepath);
     std::vector<Vec4> getVertices() const { return vertices; }
     std::vector<Vec3> getFaces() const { return faces; }
     void setModelMatrix(const Mat4& t, const Mat4& r, const Mat4& s) { translation = t; rotation = r; scale = s; updateModelMatrix(); }

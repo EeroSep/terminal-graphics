@@ -4,6 +4,18 @@
 #include "../math/Mat4.h"
 #include <cmath>
 
+Mat4 perspective(float fov, float aspect, float near, float far) {
+    float fov_rad = fov * 0.01745f;
+    float f = 1.0f / tanf(fov_rad / 2.0f);
+    float m[16] = {
+        f / aspect, 0.0f, 0.0f,  0.0f, 
+        0.0f,       f,    0.0f,  0.0f,
+        0.0f,       0.0f, -(far + near) / (far - near), -(2 * far * near) / (far - near),
+        0.0f,       0.0f, -1.0f, 0.0f
+    };
+    return Mat4(m);
+}
+
 Camera::Camera(const Vec3& pos, float fov, float aspectRatio) 
     : position(pos), aspectRatio(aspectRatio), fov(fov) {
     projectionMatrix = perspective(fov, aspectRatio, 0.1f, 100.0f);
@@ -61,17 +73,6 @@ Mat4 Camera::getViewMatrix() const {
         viewChanged = false;
     }
     return viewMatrix;
-}
-
-Mat4 perspective(float fov, float aspect, float near, float far) {
-    float f = 1.0f / tanf(fov / 2.0f);
-    float m[16] = {
-        f / aspect, 0.0f, 0.0f,  0.0f, 
-        0.0f,       f,    0.0f,  0.0f,
-        0.0f,       0.0f, -(far + near) / (far - near), -(2 * far * near) / (far - near),
-        0.0f,       0.0f, -1.0f, 0.0f
-    };
-    return Mat4(m);
 }
 
 void Camera::updateCameraVectors() {

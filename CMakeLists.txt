@@ -14,13 +14,21 @@ add_executable(terminal_graphics
     src/math/Mat4.cpp
     src/math/Vec3.cpp
     src/math/Vec4.cpp
+    src/math/Vec2.cpp
     src/math/graphic_matrices.h
+    src/engine/Camera.cpp
+    src/engine/Framebuffer.cpp
+    src/engine/InputHandler.cpp
+    src/engine/Object.cpp
+    src/engine/Rasterizer.cpp
+    src/engine/Renderer.cpp
 )
 
 # ---- Include directories ----
 target_include_directories(terminal_graphics PRIVATE
     ${NOTCURSES_INCLUDE_DIRS}
     src/math
+    src/engine
 )
 
 # ---- Link libraries ----

@@ -13,11 +13,9 @@ public:
     Rasterizer();
 
     ~Rasterizer();
-    void setFramebuffer(Framebuffer* framebuffer) { fb = framebuffer; }
     void draw(Framebuffer& fb, Object& obj, const Camera& camera);
 private:
     unsigned int width, height; 
-    Framebuffer* fb = nullptr;
-    void rasterize_triangle(const Vec4&v0, const Vec4 &v1, const Vec4 &v2);
-    void toBarycentric(const Vec4& v0, const Vec4& v1, const Vec4& v2, float x, float y);
+    void rasterize_triangle(Framebuffer& fb, const Vec4&v0, const Vec4 &v1, const Vec4 &v2);
+    Vec3 toBarycentric(const Vec4& v0, const Vec4& v1, const Vec4& v2, float x, float y);
 };
