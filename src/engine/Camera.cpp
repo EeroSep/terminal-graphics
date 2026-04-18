@@ -18,8 +18,8 @@ Mat4 perspective(float fov, float aspect, float near, float far) {
 
 Camera::Camera(const Vec3& pos, float fov, float aspectRatio) 
     : position(pos), aspectRatio(aspectRatio), fov(fov) {
-    projectionMatrix = perspective(fov, aspectRatio, 0.1f, 100.0f);
     updateCameraVectors();
+    projectionMatrix = perspective(fov, aspectRatio, 0.1f, 100.0f);
 }
 
 void Camera::setPosition(const Vec3& pos) {

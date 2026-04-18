@@ -2,7 +2,12 @@
 #include <cmath>
 #include "../math/graphic_matrices.h"
 
-Object::Object(std::vector<Vec4> vertices, std::vector<Vec3> faces) : vertices(vertices), faces(faces) {}
+Object::Object(std::vector<Vec4> vertices, std::vector<Vec3> faces) : vertices(vertices), faces(faces) {
+    translation = Mat4();
+    rotation = Mat4();
+    scale = Mat4();
+    updateModelMatrix();
+}
 
 void Object::loadFromFile(const std::string& filepath) {
     //WIP

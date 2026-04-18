@@ -34,7 +34,7 @@ std::vector<Object> loadObjs() {
         Vec3(0, 3, 7), Vec3(0, 7, 4)  // Left face
     };
     Object cube(vertices, faces);
-    cube.translate(0.0f, 0.0f, -2.0f);
+    cube.translate(0.0f, 0.0f, -1.0f);
     cube.scaleObject(1.0f, 1.0f, 1.0f);
     //cube.rotate(0.5f, 0.5f, 0.0f);
     std::vector<Object> objects;
@@ -83,25 +83,39 @@ int main() {
             rasterizer.draw(framebuffer, obj, camera);
         }
         renderer.render(&framebuffer);
-        // std::vector<uint32_t> inputs = inputHandler.processInput();
-        // for (uint32_t input : inputs) {
-        //     switch (input) {
-        //         case NCKEY_UP:
-        //             camera.move(1.0f * deltaTime, 0.0f, 0.0f);
-        //             break;
-        //         case NCKEY_DOWN:
-        //             camera.move(-1.0f * deltaTime, 0.0f, 0.0f);
-        //             break;
-        //         case NCKEY_LEFT:
-        //             camera.move(0.0f, -1.0f * deltaTime, 0.0f);
-        //             break;
-        //         case NCKEY_RIGHT:
-        //             camera.move(0.0f, 1.0f * deltaTime, 0.0f);
-        //             break;
-        //         default:
-        //             break;
-        //     }
-        // }
+        std::vector<uint32_t> inputs = inputHandler.processInput();
+        for (uint32_t input : inputs) {
+            switch (input) {
+                case NCKEY_UP:
+                    camera.rotate(0.0f, 30.0f);
+                    break;
+                case NCKEY_DOWN:
+                    camera.rotate(0.0f, -30.0f);
+                    break;
+                case NCKEY_LEFT:
+                    camera.rotate(-30.0f, 0.0f);
+                    break;
+                case NCKEY_RIGHT:
+                    camera.rotate(30.0f, 0.0f);
+                    break;
+                
+                case 'w':
+                    camera.move(1.0f * deltaTime, 0.0f, 0.0f);
+                    break;
+                case 's':
+                    camera.move(-1.0f * deltaTime, 0.0f, 0.0f);
+                    break;
+                case 'a':
+                    camera.move(0.0f, -1.0f * deltaTime, 0.0f);
+                    break;
+                case 'd':
+                    camera.move(0.0f, 1.0f * deltaTime, 0.0f);
+                    break;
+                default:
+                    break;
+            }
+        }
+        //camera.rotate(0.2f, 0.0f); 
         auto now = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration<float>(now - lastFrameTime).count();
         lastFrameTime = now;

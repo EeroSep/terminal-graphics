@@ -34,6 +34,7 @@ void Rasterizer::rasterize_triangle(Framebuffer& fb, const Vec4& v0, const Vec4&
     int maxx = std::min((int)fb.getWidth() - 1, (int)std::ceil(std::max({v0.x, v1.x, v2.x})));
     int maxy = std::min((int)fb.getHeight() - 1, (int)std::ceil(std::max({v0.y, v1.y, v2.y})));
 
+    
     for (int y = miny; y <= maxy; y++) {
         for (int x = minx; x <= maxx; x++) {
             Vec3 weights = toBarycentric(v0, v1, v2, (float)x + 0.5f, (float)y + 0.5f);
@@ -59,6 +60,10 @@ void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera) {
         v0 = pm * vm * model * v0;
         v1 = pm * vm * model * v1;
         v2 = pm * vm * model * v2;
+        // Testing: if any vertex is behind the camera, skip the triangle
+        if (v0.w < 0.1f || v1.w < 0.1f || v2.w < 0.1f) {
+        continue; 
+        }
         v0.ndc();
         v1.ndc();
         v2.ndc();

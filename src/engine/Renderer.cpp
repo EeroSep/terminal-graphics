@@ -4,7 +4,7 @@
 Renderer::Renderer(struct notcurses* nc) : nc(nc) {
 
     notcurses_term_dim_yx(nc, &term_height, &term_width);
-    blit = NCBLIT_2x2;
+    blit = NCBLIT_3x2;
     calculateDimensions();
 
     pl = notcurses_stdplane(nc);
@@ -21,13 +21,13 @@ void Renderer::clear() {
 void Renderer::render(const Framebuffer* fb) {
     if (!fb || !fb->getColorBuffer()) return;
     ncvisual_options vopts{}; 
-    vopts.n = pl;   
+    vopts.n = pl;
     vopts.blitter = blit;
     vopts.y = 0;
     vopts.x = 0;
-    vopts.leny = fb->getHeight(); 
-    vopts.lenx = fb->getWidth();
-    vopts.scaling = NCSCALE_NONE;
+    vopts.leny = real_height; 
+    vopts.lenx = real_width;
+    vopts.scaling = NCSCALE_STRETCH;
     int stride = fb->getWidth() * 4; // 4 bytes per pixel for RGBA
     int result = ncblit_rgba(fb->getColorBuffer(), stride, &vopts);
 
