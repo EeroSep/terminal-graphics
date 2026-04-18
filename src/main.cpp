@@ -73,6 +73,7 @@ int main() {
 
     InputHandler inputHandler(nc);
     bool resizeFlag = false;
+    int lastMouseX = -1, lastMouseY = -1;
     while (true) {
         if (renderer.checkTermSize()) {
             framebuffer.resize(renderer.getWidth(), renderer.getHeight());
@@ -83,9 +84,24 @@ int main() {
             rasterizer.draw(framebuffer, obj, camera);
         }
         renderer.render(&framebuffer);
-        std::vector<uint32_t> inputs = inputHandler.processInput();
-        for (uint32_t input : inputs) {
-            switch (input) {
+        std::vector<InputEvent> inputs = inputHandler.processInput();
+        for (const InputEvent& inputEvent : inputs) {
+            uint32_t input = inputEvent.input;
+            if (nckey_mouse_p(input)) {
+                if (inputEvent.type == NCTYPE_PRESS) {
+                    if (lastMouseX != -1 && lastMouseY != -1) { // take delta when dragging
+                        int deltaX = inputEvent.x - lastMouseX;
+                        int deltaY = inputEvent.y - lastMouseY;
+                        camera.rotate(deltaX * 3.0f, -deltaY * 3.0f);
+                    }
+                    lastMouseX = inputEvent.x;
+                    lastMouseY = inputEvent.y;
+                } else if (inputEvent.type == NCTYPE_RELEASE) { // resest last mouse position on release to avoid jumps
+                    lastMouseX = -1;
+                    lastMouseY = -1;
+                }
+            }
+            switch (input) { // Very nice input handling, will refactor later
                 case NCKEY_UP:
                     camera.rotate(0.0f, 30.0f);
                     break;
@@ -98,7 +114,6 @@ int main() {
                 case NCKEY_RIGHT:
                     camera.rotate(30.0f, 0.0f);
                     break;
-                
                 case 'w':
                     camera.move(1.0f * deltaTime, 0.0f, 0.0f);
                     break;
@@ -114,6 +129,7 @@ int main() {
                 default:
                     break;
             }
+            
         }
         //camera.rotate(0.2f, 0.0f); 
         auto now = std::chrono::high_resolution_clock::now();
