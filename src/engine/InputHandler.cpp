@@ -25,9 +25,7 @@ std::vector<InputEvent> InputHandler::processInput() {
         if (input >= 'A' && input <= 'Z') {
             event.input = input + ('a' - 'A'); 
         }
-
         inputs.push_back(event);
-
     }
     return inputs;
 }

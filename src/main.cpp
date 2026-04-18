@@ -92,7 +92,7 @@ int main() {
                     if (lastMouseX != -1 && lastMouseY != -1) { // take delta when dragging
                         int deltaX = inputEvent.x - lastMouseX;
                         int deltaY = inputEvent.y - lastMouseY;
-                        camera.rotate(deltaX * 3.0f, -deltaY * 3.0f);
+                        camera.rotate(deltaX * deltaTime, -deltaY * deltaTime * 2.0f);
                     }
                     lastMouseX = inputEvent.x;
                     lastMouseY = inputEvent.y;
@@ -103,16 +103,16 @@ int main() {
             }
             switch (input) { // Very nice input handling, will refactor later
                 case NCKEY_UP:
-                    camera.rotate(0.0f, 30.0f);
+                    camera.rotate(0.0f, 1.0f * deltaTime);
                     break;
                 case NCKEY_DOWN:
-                    camera.rotate(0.0f, -30.0f);
+                    camera.rotate(0.0f, -1.0f * deltaTime);
                     break;
                 case NCKEY_LEFT:
-                    camera.rotate(-30.0f, 0.0f);
+                    camera.rotate(-1.0f * deltaTime, 0.0f);
                     break;
                 case NCKEY_RIGHT:
-                    camera.rotate(30.0f, 0.0f);
+                    camera.rotate(1.0f * deltaTime, 0.0f);
                     break;
                 case 'w':
                     camera.move(1.0f * deltaTime, 0.0f, 0.0f);
@@ -131,7 +131,6 @@ int main() {
             }
             
         }
-        //camera.rotate(0.2f, 0.0f); 
         auto now = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration<float>(now - lastFrameTime).count();
         lastFrameTime = now;

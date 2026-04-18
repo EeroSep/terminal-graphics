@@ -21,7 +21,7 @@ private:
     float yaw = -1.5708f; // in radians
     float pitch = 0.0f;
     float movementSpeed = 1.0f;
-    float mouseSensitivity = 0.1f * 0.01745f; // convert to radians
+    float mouseSensitivity = 20.0f * 0.01745f; // convert to radians
     float aspectRatio;
     float fov;
     mutable Mat4 viewMatrix;
