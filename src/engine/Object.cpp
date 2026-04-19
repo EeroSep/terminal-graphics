@@ -2,10 +2,14 @@
 #include <cmath>
 #include "../math/graphic_matrices.h"
 
-Object::Object(std::vector<Vec4> vertices, std::vector<Vec3> faces) : vertices(vertices), faces(faces) {
+Object::Object(std::vector<Vec4> vertices, std::vector<Face> faces) : vertices(vertices), faces(faces) {
     translation = Mat4();
     rotation = Mat4();
     scale = Mat4();
+    updateModelMatrix();
+}
+
+Object::Object(const Object& other) : vertices(other.vertices), faces(other.faces), translation(other.translation), rotation(other.rotation), scale(other.scale) {
     updateModelMatrix();
 }
 
@@ -27,5 +31,11 @@ void Object::translate(float x, float y, float z) {
 void Object::scaleObject(float x, float y, float z) {
     Mat4 scale = scaling(x, y, z);
     setScale(scale * scale);
+}
+
+void Object::setColor(uint32_t color, int faceIndex) {
+    if (faceIndex >= 0 && faceIndex < faces.size()) {
+        faces[faceIndex].color = color;
+    }
 }
 

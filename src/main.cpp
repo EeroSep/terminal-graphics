@@ -25,20 +25,30 @@ std::vector<Object> loadObjs() {
         Vec4(0.5f, 0.5f, 0.5f, 1.0f),
         Vec4(-0.5f, 0.5f, 0.5f, 1.0f)
     };
-    std::vector<Vec3> faces = {
-        Vec3(0, 1, 2), Vec3(0, 2, 3), // Back face
-        Vec3(4, 5, 6), Vec3(4, 6, 7), // Front face
-        Vec3(0, 1, 5), Vec3(0, 5, 4), // Bottom face
-        Vec3(2, 3, 7), Vec3(2, 7, 6), // Top face
-        Vec3(1, 2, 6), Vec3(1, 6, 5), // Right face
-        Vec3(0, 3, 7), Vec3(0, 7, 4)  // Left face
+
+        std::vector<Face> faces = {
+        {Vec3(0, 1, 2), 0xFFFFFFFF}, {Vec3(0, 2, 3), 0xFFFFFFFF}, // Back face
+        {Vec3(4, 5, 6), 0xFF0088FF}, {Vec3(4, 6, 7), 0xFFFFFFFF}, // Front face
+        {Vec3(0, 1, 5), 0xFFFFFFFF}, {Vec3(0, 5, 4), 0xFFFFFFFF}, // Bottom face
+        {Vec3(2, 3, 7), 0xFF8800FF}, {Vec3(2, 7, 6), 0xFFFFFFFF}, // Top face
+        {Vec3(1, 2, 6), 0xFFFFFFFF}, {Vec3(1, 6, 5), 0xFFFFFFFF}, // Right face
+        {Vec3(0, 3, 7), 0xFFFFFFFF}, {Vec3(0, 7, 4), 0xFFFFFFFF}   // Left face
     };
     Object cube(vertices, faces);
-    cube.translate(0.0f, 0.0f, -1.0f);
-    cube.scaleObject(1.0f, 1.0f, 1.0f);
-    //cube.rotate(0.5f, 0.5f, 0.0f);
+    cube.translate(0.0f, 0.0f, -2.0f);
+
+    Object cube2 = cube;
+    Object cube3 = cube;
+    Object cube4 = cube;
+    cube2.translate(1.0f, -1.0f, 0.0f);
+    cube3.translate(-1.0f, -1.0f, 1.0f);
+    cube4.translate(-1.0f, -1.0f, 0.0f);
+
     std::vector<Object> objects;
     objects.push_back(cube);
+    objects.push_back(cube2);
+    objects.push_back(cube3);
+    objects.push_back(cube4);
     //Object monkey = Object::loadFromFile("assets/monkey.obj");
     //objects.push_back(monkey);
     return objects;
@@ -84,6 +94,8 @@ int main() {
             rasterizer.draw(framebuffer, obj, camera);
         }
         renderer.render(&framebuffer);
+
+        // Input handling
         std::vector<InputEvent> inputs = inputHandler.processInput();
         for (const InputEvent& inputEvent : inputs) {
             uint32_t input = inputEvent.input;
@@ -131,6 +143,8 @@ int main() {
             }
             
         }
+
+
         auto now = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration<float>(now - lastFrameTime).count();
         lastFrameTime = now;

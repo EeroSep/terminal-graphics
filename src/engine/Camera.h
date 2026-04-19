@@ -20,8 +20,8 @@ private:
     Vec3 position, forward, up, right;
     float yaw = -1.5708f; // in radians
     float pitch = 0.0f;
-    float movementSpeed = 1.0f;
-    float mouseSensitivity = 20.0f * 0.01745f; // convert to radians
+    float movementSpeed = 5.0f;
+    float mouseSensitivity = 40.0f * 0.01745f; // convert to radians
     float aspectRatio;
     float fov;
     mutable Mat4 viewMatrix;

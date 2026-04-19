@@ -8,6 +8,11 @@
 #include "Object.h"
 #include "Camera.h"
 
+struct ClippedTriangle {
+    Vec4 v[3];
+    uint32_t color;
+};
+
 class Rasterizer {
 public:
     Rasterizer();
@@ -16,6 +21,8 @@ public:
     void draw(Framebuffer& fb, Object& obj, const Camera& camera);
 private:
     unsigned int width, height; 
-    void rasterize_triangle(Framebuffer& fb, const Vec4&v0, const Vec4 &v1, const Vec4 &v2);
+    void rasterize_triangle(Framebuffer& fb, const Vec4&v0, const Vec4 &v1, const Vec4 &v2, uint32_t color);
     Vec3 toBarycentric(const Vec4& v0, const Vec4& v1, const Vec4& v2, float x, float y);
+    std::vector<ClippedTriangle> clipNearPlane(const Vec4& v0, const Vec4& v1, const Vec4& v2, uint32_t color);
+    Vec4 intersect(const Vec4& v1, const Vec4& v2, float wNear);
 };

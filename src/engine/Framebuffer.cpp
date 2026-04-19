@@ -1,11 +1,11 @@
 #include "Framebuffer.h"
-
+#include <cstdint>
 
 Framebuffer::Framebuffer(unsigned int width, unsigned int height) : width(width), height(height) {
     resize(width, height);
 }
 
-bool Framebuffer::test_and_set(int x, int y, float depth, unsigned int color) {
+bool Framebuffer::test_and_set(int x, int y, float depth, uint32_t color) {
     if (x < 0 || x >= (int)width || y < 0 || y >= (int)height) return false;
     int index = y * width + x;
     if (depth < depth_buffer[index]) {
