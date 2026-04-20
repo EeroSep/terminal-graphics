@@ -29,6 +29,7 @@ target_include_directories(terminal_graphics PRIVATE
     ${NOTCURSES_INCLUDE_DIRS}
     src/math
     src/engine
+    src/utility
 )
 
 # ---- Link libraries ----

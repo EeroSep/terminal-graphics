@@ -1,5 +1,5 @@
 #include "Framebuffer.h"
-#include <cstdint>
+
 
 Framebuffer::Framebuffer(unsigned int width, unsigned int height) : width(width), height(height) {
     resize(width, height);
@@ -19,11 +19,11 @@ bool Framebuffer::test_and_set(int x, int y, float depth, uint32_t color) {
 void Framebuffer::resize(unsigned int new_width, unsigned int new_height) {
     width = new_width;
     height = new_height;
-    color_buffer.assign(width * height, 0x000000FF); 
+    color_buffer.assign(width * height, 0xFF000000); 
     depth_buffer.assign(width * height, 1.0f); 
 }
 
 void Framebuffer::clear() {
-    std::fill(color_buffer.begin(), color_buffer.end(), 0x000000FF);
+    std::fill(color_buffer.begin(), color_buffer.end(), 0xFF000000);
     std::fill(depth_buffer.begin(), depth_buffer.end(), 1.0f);
 }

@@ -7,35 +7,47 @@ Renderer::Renderer(struct notcurses* nc) : nc(nc) {
     blit = NCBLIT_3x2;
     calculateDimensions();
 
-    pl = notcurses_stdplane(nc);
+    game = notcurses_stdplane(nc);
+    ui = notcurses_stdplane(nc);
 
-    ncplane_set_fg_rgb(pl, 0xffffff);
+    ncplane_set_fg_rgb(game, 0xffffff);
+    ncplane_set_fg_rgb(ui, 0xffffff);
+    ncplane_set_bg_default(ui);
+    ncplane_move_top(ui);
 }
 
 Renderer::~Renderer() {
 }
 
 void Renderer::clear() {
-    ncplane_erase(pl);
+    ncplane_erase(game);
+    ncplane_erase(ui);
 }
-void Renderer::render(const Framebuffer* fb) {
+void Renderer::render(const Framebuffer* fb, const int fps) {
     if (!fb || !fb->getColorBuffer()) return;
     ncvisual_options vopts{}; 
-    vopts.n = pl;
+    vopts.n = game;
     vopts.blitter = blit;
     vopts.y = 0;
     vopts.x = 0;
     vopts.leny = real_height; 
     vopts.lenx = real_width;
     vopts.scaling = NCSCALE_STRETCH;
+    vopts.flags = 0;
     int stride = fb->getWidth() * 4; // 4 bytes per pixel for RGBA
-    int result = ncblit_rgba(fb->getColorBuffer(), stride, &vopts);
+    int result = ncblit_rgba(fb->getColorBuffer(), stride, &vopts); // Render the framebuffer to game plane
 
     if (result < 0) {
         fprintf(stderr, "Blit failed with code: %d\n", result);
     }
+    // Render FPS on UI plane
+    ncplane_cursor_move_yx(ui, 0, 0);
+
+    ncplane_printf(ui, "FPS: %d  ", fps);
+
     notcurses_render(nc);
 }
+
 bool Renderer::checkTermSize() {
     unsigned int new_width, new_height;
     notcurses_term_dim_yx(nc, &new_height, &new_width);
@@ -43,7 +55,8 @@ bool Renderer::checkTermSize() {
         term_width = new_width;
         term_height = new_height;
         calculateDimensions();
-        ncplane_resize_realign(pl);
+        ncplane_resize_realign(game);
+        ncplane_resize_realign(ui);
         return true;
     }
     return false;

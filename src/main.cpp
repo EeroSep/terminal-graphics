@@ -12,6 +12,7 @@
 #include "engine/Renderer.h"
 #include "engine/Object.h"
 #include "engine/InputHandler.h"
+#include "utility/Colors.h"
 
 std::vector<Object> loadObjs() {
     //Hardcoded cube :D
@@ -27,23 +28,23 @@ std::vector<Object> loadObjs() {
     };
 
         std::vector<Face> faces = {
-        {Vec3(0, 1, 2), 0xFFFFFFFF}, {Vec3(0, 2, 3), 0xFFFFFFFF}, // Back face
-        {Vec3(4, 5, 6), 0xFF0088FF}, {Vec3(4, 6, 7), 0xFFFFFFFF}, // Front face
-        {Vec3(0, 1, 5), 0xFFFFFFFF}, {Vec3(0, 5, 4), 0xFFFFFFFF}, // Bottom face
-        {Vec3(2, 3, 7), 0xFF8800FF}, {Vec3(2, 7, 6), 0xFFFFFFFF}, // Top face
-        {Vec3(1, 2, 6), 0xFFFFFFFF}, {Vec3(1, 6, 5), 0xFFFFFFFF}, // Right face
-        {Vec3(0, 3, 7), 0xFFFFFFFF}, {Vec3(0, 7, 4), 0xFFFFFFFF}   // Left face
+        {Vec3(0, 1, 2), Colors::brown}, {Vec3(0, 2, 3), Colors::brown}, // Back face
+        {Vec3(4, 5, 6), Colors::brown}, {Vec3(4, 6, 7), Colors::brown}, // Front face
+        {Vec3(0, 1, 5), Colors::brown}, {Vec3(0, 5, 4), Colors::brown}, // Bottom face
+        {Vec3(2, 3, 7), Colors::green}, {Vec3(2, 7, 6), Colors::green}, // Top face
+        {Vec3(1, 2, 6), Colors::brown}, {Vec3(1, 6, 5), Colors::brown}, // Right face
+        {Vec3(0, 3, 7), Colors::brown}, {Vec3(0, 7, 4), Colors::brown}   // Left face
     };
     Object cube(vertices, faces);
-    cube.translate(0.0f, 0.0f, -2.0f);
+    cube.translate(0.0f, -1.0f, -2.0f);
 
     Object cube2 = cube;
     Object cube3 = cube;
     Object cube4 = cube;
-    cube2.translate(1.0f, -1.0f, 0.0f);
-    cube3.translate(-1.0f, -1.0f, 1.0f);
-    cube4.translate(-1.0f, -1.0f, 0.0f);
-
+    cube2.translate(1.0f, 1.0f, 0.0f);
+    cube3.translate(0.0f, 1.0f, 1.0f);
+    cube4.translate(1.0f, 1.0f, 0.0f);
+    cube.scaleObject(20.0f, 0.5f, 20.0f);
     std::vector<Object> objects;
     objects.push_back(cube);
     objects.push_back(cube2);
@@ -93,7 +94,7 @@ int main() {
         for (Object& obj : scene) {
             rasterizer.draw(framebuffer, obj, camera);
         }
-        renderer.render(&framebuffer);
+        renderer.render(&framebuffer, static_cast<int>(1.0f / deltaTime));
 
         // Input handling
         std::vector<InputEvent> inputs = inputHandler.processInput();
@@ -143,8 +144,6 @@ int main() {
             }
             
         }
-
-
         auto now = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration<float>(now - lastFrameTime).count();
         lastFrameTime = now;

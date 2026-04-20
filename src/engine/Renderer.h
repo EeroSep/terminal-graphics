@@ -8,7 +8,7 @@ public:
     Renderer(struct notcurses* nc);
     ~Renderer();
 
-    void render(const Framebuffer* fb);
+    void render(const Framebuffer* fb, const int fps);
     void clear();
    
     void setBlitter(ncblitter_e blitter) { blit = blitter; }
@@ -18,7 +18,8 @@ public:
 
 private:
     struct notcurses* nc;
-    struct ncplane* pl;
+    struct ncplane* game;
+    struct ncplane* ui;
     unsigned int term_width, term_height, real_width, real_height;
     ncblitter_e blit = NCBLIT_1x1;
     void calculateDimensions();
