@@ -52,16 +52,31 @@ void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera) {
     Mat4 model = obj.getModelMatrix();
     Mat4 vm = camera.getViewMatrix();
     Mat4 pm = camera.getProjectionMatrix();
-    Mat4 mvp = pm * vm * model;
+    Mat4 mv = vm * model;
     Mat4 vp = viewport(fb.getWidth(), fb.getHeight());
+
+    // Transform each unique vertex into view space once, rather than once per
+    // face that references it.
+    if (viewSpaceCache.size() < vertices.size()) viewSpaceCache.resize(vertices.size());
+    for (size_t i = 0; i < vertices.size(); i++) viewSpaceCache[i] = mv * vertices[i];
+
     for (const Face& face : faces) {
-        // Get vertices and transform to clip space
-        Vec4 v0 = vertices[face.indices.x];
-        Vec4 v1 = vertices[face.indices.y];
-        Vec4 v2 = vertices[face.indices.z];
-        v0 = mvp * v0;
-        v1 = mvp * v1;
-        v2 = mvp * v2;
+        // Backface cull in view space: the camera sits at the origin looking
+        // down -Z, so a vertex's view-space position doubles as the direction
+        // from the camera to that point on the face.
+        const Vec4& view0 = viewSpaceCache[face.indices.x];
+        const Vec4& view1 = viewSpaceCache[face.indices.y];
+        const Vec4& view2 = viewSpaceCache[face.indices.z];
+        Vec3 p0(view0.x, view0.y, view0.z);
+        Vec3 p1(view1.x, view1.y, view1.z);
+        Vec3 p2(view2.x, view2.y, view2.z);
+        Vec3 normal = (p1 - p0).cross(p2 - p0);
+        if (normal.dot(p0) >= 0.0f) continue;
+
+        // Transform to clip space
+        Vec4 v0 = pm * view0;
+        Vec4 v1 = pm * view1;
+        Vec4 v2 = pm * view2;
         // Clip against near plane and rasterize
         std::vector<ClippedTriangle> tris = clipNearPlane(v0, v1, v2, face.color);
         if (tris.empty()) continue; 

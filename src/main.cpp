@@ -28,12 +28,12 @@ std::vector<Object> loadObjs() {
     };
 
         std::vector<Face> faces = {
-        {Vec3(0, 1, 2), Colors::brown}, {Vec3(0, 2, 3), Colors::brown}, // Back face
+        {Vec3(0, 2, 1), Colors::brown}, {Vec3(0, 3, 2), Colors::brown}, // Back face
         {Vec3(4, 5, 6), Colors::brown}, {Vec3(4, 6, 7), Colors::brown}, // Front face
         {Vec3(0, 1, 5), Colors::brown}, {Vec3(0, 5, 4), Colors::brown}, // Bottom face
         {Vec3(2, 3, 7), Colors::green}, {Vec3(2, 7, 6), Colors::green}, // Top face
         {Vec3(1, 2, 6), Colors::brown}, {Vec3(1, 6, 5), Colors::brown}, // Right face
-        {Vec3(0, 3, 7), Colors::brown}, {Vec3(0, 7, 4), Colors::brown}   // Left face
+        {Vec3(0, 7, 3), Colors::brown}, {Vec3(0, 4, 7), Colors::brown}   // Left face
     };
     Object cube(vertices, faces);
     cube.translate(0.0f, -1.0f, -2.0f);

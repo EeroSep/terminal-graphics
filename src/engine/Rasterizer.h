@@ -20,7 +20,8 @@ public:
     ~Rasterizer();
     void draw(Framebuffer& fb, Object& obj, const Camera& camera);
 private:
-    unsigned int width, height; 
+    unsigned int width, height;
+    std::vector<Vec4> viewSpaceCache; // reused across frames to avoid reallocating every draw() call
     void rasterize_triangle(Framebuffer& fb, const Vec4&v0, const Vec4 &v1, const Vec4 &v2, uint32_t color);
     Vec3 toBarycentric(const Vec4& v0, const Vec4& v1, const Vec4& v2, float x, float y);
     std::vector<ClippedTriangle> clipNearPlane(const Vec4& v0, const Vec4& v1, const Vec4& v2, uint32_t color);
