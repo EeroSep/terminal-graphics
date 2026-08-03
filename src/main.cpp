@@ -50,8 +50,9 @@ std::vector<Object> loadObjs() {
     objects.push_back(cube2);
     objects.push_back(cube3);
     objects.push_back(cube4);
-    //Object monkey = Object::loadFromFile("assets/monkey.obj");
-    //objects.push_back(monkey);
+    Object pyramid = Object::loadFromFile("assets/pyramid.obj", Colors::purple);
+    pyramid.translate(-2.0f, -0.5f, -2.0f);
+    objects.push_back(pyramid);
     return objects;
 }
 

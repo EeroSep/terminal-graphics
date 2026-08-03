@@ -47,20 +47,21 @@ void Rasterizer::rasterize_triangle(Framebuffer& fb, const Vec4& v0, const Vec4&
 }
 
 void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera) {
-    std::vector<Vec4> vertices = obj.getVertices();
-    std::vector<Face> faces = obj.getFaces();
+    const std::vector<Vec4>& vertices = obj.getVertices();
+    const std::vector<Face>& faces = obj.getFaces();
     Mat4 model = obj.getModelMatrix();
     Mat4 vm = camera.getViewMatrix();
     Mat4 pm = camera.getProjectionMatrix();
+    Mat4 mvp = pm * vm * model;
     Mat4 vp = viewport(fb.getWidth(), fb.getHeight());
-    for (Face& face : faces) {
+    for (const Face& face : faces) {
         // Get vertices and transform to clip space
         Vec4 v0 = vertices[face.indices.x];
         Vec4 v1 = vertices[face.indices.y];
         Vec4 v2 = vertices[face.indices.z];
-        v0 = pm * vm * model * v0;
-        v1 = pm * vm * model * v1;
-        v2 = pm * vm * model * v2;
+        v0 = mvp * v0;
+        v1 = mvp * v1;
+        v2 = mvp * v2;
         // Clip against near plane and rasterize
         std::vector<ClippedTriangle> tris = clipNearPlane(v0, v1, v2, face.color);
         if (tris.empty()) continue; 

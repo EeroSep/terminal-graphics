@@ -17,9 +17,9 @@ class Object {
 public:
     Object(std::vector<Vec4> vertices, std::vector<Face> faces);
     Object(const Object& other);
-    void loadFromFile(const std::string& filepath);
-    std::vector<Vec4> getVertices() const { return vertices; }
-    std::vector<Face> getFaces() const { return faces; }
+    static Object loadFromFile(const std::string& filepath, uint32_t color = 0xFFFFFFFFu);
+    const std::vector<Vec4>& getVertices() const { return vertices; }
+    const std::vector<Face>& getFaces() const { return faces; }
     void setModelMatrix(const Mat4& t, const Mat4& r, const Mat4& s) { translation = t; rotation = r; scale = s; updateModelMatrix(); }
     void setTranslation(const Mat4& t) { translation = t; updateModelMatrix(); }
     void setRotation(const Mat4& r) { rotation = r; updateModelMatrix(); }
