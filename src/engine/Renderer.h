@@ -22,5 +22,6 @@ private:
     struct ncplane* ui;
     unsigned int term_width, term_height, real_width, real_height;
     ncblitter_e blit = NCBLIT_1x1;
+    
     void calculateDimensions();
 };

@@ -5,6 +5,7 @@ Renderer::Renderer(struct notcurses* nc) : nc(nc) {
 
     notcurses_term_dim_yx(nc, &term_height, &term_width);
     blit = NCBLIT_3x2;
+    //blit = NCBLIT_BRAILLE;
     calculateDimensions();
 
     game = notcurses_stdplane(nc);

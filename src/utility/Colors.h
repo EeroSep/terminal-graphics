@@ -17,4 +17,5 @@ namespace Colors {
     const uint32_t orange = rgba(255, 165, 0, 255);
     const uint32_t purple = rgba(128, 0, 128, 255);
     const uint32_t brown = rgba(148, 86, 0, 255);
+    const uint32_t transparent = rgba(0, 0, 0, 0);
 }

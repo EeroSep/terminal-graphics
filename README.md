@@ -31,9 +31,6 @@ There is no in-app quit key yet; exit with Ctrl+C.
 - `w` / `a` / `s` / `d`: move forward / left / back / right
 
 # To-do:
-- backface culling
-- normals
 - materials
-- multithreaading
-- UI?
-- double buffering
+- UI improvements
+- 

@@ -2,6 +2,9 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 #include <notcurses/notcurses.h>
 #include "math/Mat4.h"
 #include "math/Vec4.h"
@@ -53,6 +56,15 @@ std::vector<Object> loadObjs() {
     Object pyramid = Object::loadFromFile("assets/pyramid.obj", Colors::purple);
     pyramid.translate(-2.0f, -0.5f, -2.0f);
     objects.push_back(pyramid);
+
+    Object monkey = Object::loadFromFile("assets/monkey.obj", Colors::purple);
+    monkey.translate(2.0f, -0.5f, 2.0f);
+    objects.push_back(monkey);
+
+    Object teapot = Object::loadFromFile("assets/teapot.obj", Colors::red);
+    teapot.translate(-2.0f, -0.5f, 2.0f);
+    objects.push_back(teapot);
+
     return objects;
 }
 
@@ -73,7 +85,6 @@ int main() {
     // Setting size from renderer
     Framebuffer framebuffer(renderer.getWidth(), renderer.getHeight());
 
-    // Create rasterizer
     Rasterizer rasterizer;
 
     // Create camera in origin with 90 fov and aspect ratio from renderer
@@ -86,19 +97,75 @@ int main() {
     InputHandler inputHandler(nc);
     bool resizeFlag = false;
     int lastMouseX = -1, lastMouseY = -1;
-    while (true) {
-        if (renderer.checkTermSize()) {
-            framebuffer.resize(renderer.getWidth(), renderer.getHeight());
-            camera.setAspectRatio(static_cast<float>(renderer.getWidth()) / static_cast<float>(renderer.getHeight()));
+
+    // Handoff between the raster thread (this loop) and the render thread below.
+    // frameReady: raster has swapped a finished frame into the front buffer, render should pick it up.
+    // bufferFree: render has finished with the front buffer, raster may swap again.
+    std::mutex mtx;
+    std::condition_variable cv;
+    bool frameReady = false;
+    bool bufferFree = true;
+    std::atomic<int> fps{0};
+
+    // notcurses itself isn't safe to call concurrently from two threads on the
+    // same context: render(), checkTermSize() and processInput() all touch
+    // internal notcurses state, so they need to be mutually exclusive even
+    // though they don't share any of our own data structures.
+    std::mutex ncMutex;
+
+    std::thread renderThread([&]() {
+        while (true) {
+            std::unique_lock<std::mutex> lock(mtx);
+            cv.wait(lock, [&] { return frameReady; });
+            frameReady = false;
+            lock.unlock();
+
+            {
+                std::lock_guard<std::mutex> ncLock(ncMutex);
+                renderer.render(&framebuffer, fps.load());
+            }
+
+            {
+                std::lock_guard<std::mutex> lock2(mtx);
+                bufferFree = true;
+            }
+            cv.notify_one();
         }
+    });
+
+    while (true) {
+        // Safe unlocked: this only ever touches the current back buffer,
+        // which the render thread never reads.
         framebuffer.clear();
         for (Object& obj : scene) {
             rasterizer.draw(framebuffer, obj, camera);
         }
-        renderer.render(&framebuffer, static_cast<int>(1.0f / deltaTime));
+
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            cv.wait(lock, [&] { return bufferFree; });
+            bool resized;
+            {
+                std::lock_guard<std::mutex> ncLock(ncMutex);
+                resized = renderer.checkTermSize();
+            }
+            if (resized) {
+                framebuffer.resize(renderer.getWidth(), renderer.getHeight());
+                camera.setAspectRatio(static_cast<float>(renderer.getWidth()) / static_cast<float>(renderer.getHeight()));
+            }
+            framebuffer.swapBuffer();
+            bufferFree = false;
+            frameReady = true;
+        }
+        cv.notify_one();
+        fps.store(static_cast<int>(1.0f / deltaTime));
 
         // Input handling
-        std::vector<InputEvent> inputs = inputHandler.processInput();
+        std::vector<InputEvent> inputs;
+        {
+            std::lock_guard<std::mutex> ncLock(ncMutex);
+            inputs = inputHandler.processInput();
+        }
         for (const InputEvent& inputEvent : inputs) {
             uint32_t input = inputEvent.input;
             if (nckey_mouse_p(input)) {
