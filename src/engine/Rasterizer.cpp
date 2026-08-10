@@ -5,6 +5,7 @@
 #include "Framebuffer.h"
 #include <algorithm>
 #include "../math/graphic_matrices.h"
+#include "../utility/Colors.h"
 #include <iostream>
 
 Rasterizer::Rasterizer() {
@@ -46,7 +47,7 @@ void Rasterizer::rasterize_triangle(Framebuffer& fb, const Vec4& v0, const Vec4&
     }
 }
 
-void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera) {
+void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera, const Light& light) {
     const std::vector<Vec4>& vertices = obj.getVertices();
     const std::vector<Face>& faces = obj.getFaces();
     Mat4 model = obj.getModelMatrix();
@@ -59,6 +60,11 @@ void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera) {
     // face that references it.
     if (viewSpaceCache.size() < vertices.size()) viewSpaceCache.resize(vertices.size());
     for (size_t i = 0; i < vertices.size(); i++) viewSpaceCache[i] = mv * vertices[i];
+
+    // The light direction is defined in world space; w = 0 drops the view
+    // matrix's translation so only its rotation is applied.
+    Vec4 lightDirView4 = vm * Vec4(light.direction, 0.0f);
+    Vec3 lightDirView = Vec3(lightDirView4.x, lightDirView4.y, lightDirView4.z).normalize();
 
     for (const Face& face : faces) {
         // Backface cull in view space: the camera sits at the origin looking
@@ -73,12 +79,23 @@ void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera) {
         Vec3 normal = (p1 - p0).cross(p2 - p0);
         if (normal.dot(p0) >= 0.0f) continue;
 
+        // Flat (per-face) Lambertian shading, reusing the normal above.
+        Vec3 n = normal.normalize();
+        float ndotl = std::max(0.0f, n.dot(lightDirView));
+        float shade = std::min(1.0f, face.material.ambient + face.material.diffuse * ndotl * light.intensity);
+        Vec3 shaded = face.material.albedo * shade;
+        uint32_t color = Colors::rgba(
+            static_cast<uint8_t>(std::clamp(shaded.x, 0.0f, 1.0f) * 255.0f),
+            static_cast<uint8_t>(std::clamp(shaded.y, 0.0f, 1.0f) * 255.0f),
+            static_cast<uint8_t>(std::clamp(shaded.z, 0.0f, 1.0f) * 255.0f),
+            255);
+
         // Transform to clip space
         Vec4 v0 = pm * view0;
         Vec4 v1 = pm * view1;
         Vec4 v2 = pm * view2;
         // Clip against near plane and rasterize
-        std::vector<ClippedTriangle> tris = clipNearPlane(v0, v1, v2, face.color);
+        std::vector<ClippedTriangle> tris = clipNearPlane(v0, v1, v2, color);
         if (tris.empty()) continue; 
         for (ClippedTriangle& tri : tris) {
             tri.v[0].ndc();

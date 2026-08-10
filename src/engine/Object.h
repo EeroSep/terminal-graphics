@@ -2,15 +2,16 @@
 #include "../math/Vec3.h"
 #include "../math/Vec4.h"
 #include "../math/Mat4.h"
+#include "Material.h"
 #include <vector>
 #include <string>
 
 
 struct Face {
     Vec3 indices;
-    uint32_t color;
+    Material material;
 
-    Face(Vec3 idx, uint32_t col) : indices(idx), color(col) {}
+    Face(Vec3 idx, Material material) : indices(idx), material(material) {}
 };
 
 class Object {

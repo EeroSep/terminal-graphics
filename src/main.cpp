@@ -15,6 +15,7 @@
 #include "engine/Renderer.h"
 #include "engine/Object.h"
 #include "engine/InputHandler.h"
+#include "engine/Light.h"
 #include "utility/Colors.h"
 
 std::vector<Object> loadObjs() {
@@ -47,7 +48,6 @@ std::vector<Object> loadObjs() {
     cube2.translate(1.0f, 1.0f, 0.0f);
     cube3.translate(0.0f, 1.0f, 1.0f);
     cube4.translate(1.0f, 1.0f, 0.0f);
-    cube.scaleObject(20.0f, 0.5f, 20.0f);
     std::vector<Object> objects;
     objects.push_back(cube);
     objects.push_back(cube2);
@@ -94,6 +94,8 @@ int main() {
         static_cast<float>(renderer.getWidth()) / static_cast<float>(renderer.getHeight())
         );
 
+    Light light(Vec3(0.4f, 1.0f, 0.3f));
+
     InputHandler inputHandler(nc);
     bool resizeFlag = false;
     int lastMouseX = -1, lastMouseY = -1;
@@ -138,7 +140,7 @@ int main() {
         // which the render thread never reads.
         framebuffer.clear();
         for (Object& obj : scene) {
-            rasterizer.draw(framebuffer, obj, camera);
+            rasterizer.draw(framebuffer, obj, camera, light);
         }
 
         {

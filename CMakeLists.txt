@@ -19,6 +19,8 @@ add_executable(terminal_graphics
     src/engine/Camera.cpp
     src/engine/Framebuffer.cpp
     src/engine/InputHandler.cpp
+    src/engine/Light.h
+    src/engine/Material.cpp
     src/engine/Object.cpp
     src/engine/Rasterizer.cpp
     src/engine/Renderer.cpp

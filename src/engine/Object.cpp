@@ -84,7 +84,8 @@ void Object::scaleObject(float x, float y, float z) {
 
 void Object::setColor(uint32_t color, int faceIndex) {
     if (faceIndex >= 0 && faceIndex < faces.size()) {
-        faces[faceIndex].color = color;
+        Material& material = faces[faceIndex].material;
+        material = Material(color, material.ambient, material.diffuse);
     }
 }
 

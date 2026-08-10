@@ -7,6 +7,7 @@
 #include "Framebuffer.h"
 #include "Object.h"
 #include "Camera.h"
+#include "Light.h"
 
 struct ClippedTriangle {
     Vec4 v[3];
@@ -18,7 +19,7 @@ public:
     Rasterizer();
 
     ~Rasterizer();
-    void draw(Framebuffer& fb, Object& obj, const Camera& camera);
+    void draw(Framebuffer& fb, Object& obj, const Camera& camera, const Light& light);
 private:
     unsigned int width, height;
     std::vector<Vec4> viewSpaceCache; // reused across frames to avoid reallocating every draw() call
