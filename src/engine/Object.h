@@ -1,4 +1,5 @@
 #pragma once
+#include "../math/Vec2.h"
 #include "../math/Vec3.h"
 #include "../math/Vec4.h"
 #include "../math/Mat4.h"
@@ -9,9 +10,15 @@
 
 struct Face {
     Vec3 indices;
+    Vec2 uv[3]; // per-corner texture coordinates, matching order of indices
     Material material;
 
-    Face(Vec3 idx, Material material) : indices(idx), material(material) {}
+    Face(Vec3 idx, Vec2 uv0, Vec2 uv1, Vec2 uv2, Material material)
+        : indices(idx), uv{uv0, uv1, uv2}, material(material) {}
+
+    // Convenience overload for untextured faces (UVs unused when material.texture is null).
+    Face(Vec3 idx, Material material)
+        : indices(idx), uv{Vec2(0.0f, 0.0f), Vec2(0.0f, 0.0f), Vec2(0.0f, 0.0f)}, material(material) {}
 };
 
 class Object {

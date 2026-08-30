@@ -64,7 +64,10 @@ std::vector<Object> loadObjs() {
     Object teapot = Object::loadFromFile("assets/teapot.obj", Colors::red);
     teapot.translate(-2.0f, -0.5f, 2.0f);
     objects.push_back(teapot);
-
+    Object map = Object::loadFromFile("assets/map.obj", Colors::white);
+    map.rotate(0.0f, 0.0f, -1.5707963f); // 90 degrees, in radians
+    map.scaleObject(150.0f, 150.0f, 150.0f);
+    objects.push_back(map);
     return objects;
 }
 
@@ -84,7 +87,8 @@ int main() {
 
     // Setting size from renderer
     Framebuffer framebuffer(renderer.getWidth(), renderer.getHeight());
-
+    framebuffer.setClearColor(Colors::rgba(135, 206, 235, 255)); // sky blue
+    framebuffer.setClearColor(Colors::black); 
     Rasterizer rasterizer;
 
     // Create camera in origin with 90 fov and aspect ratio from renderer

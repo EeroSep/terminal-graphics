@@ -15,11 +15,13 @@ class Framebuffer {
     bool test_and_set(int x, int y, float depth, uint32_t color);
     const uint32_t* getColorBuffer() const { return color_buffer[frontIndex()].data(); }
     void swapBuffer() { backIndex = frontIndex(); }
+    void setClearColor(uint32_t color) { clearColor = color; }
 
     private:
     unsigned int frontIndex() const { return 1 - backIndex; }
     unsigned int width, height;
     unsigned int backIndex = 0;
+    uint32_t clearColor;
     std::array<std::vector<uint32_t>, 2> color_buffer;
     std::vector<float> depth_buffer;
 };

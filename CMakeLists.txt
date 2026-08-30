@@ -24,6 +24,8 @@ add_executable(terminal_graphics
     src/engine/Object.cpp
     src/engine/Rasterizer.cpp
     src/engine/Renderer.cpp
+    src/engine/Texture.cpp
+    src/external/stb_image_impl.cpp
 )
 
 # ---- Include directories ----
@@ -32,6 +34,7 @@ target_include_directories(terminal_graphics PRIVATE
     src/math
     src/engine
     src/utility
+    src/external
 )
 
 # ---- Link libraries ----
