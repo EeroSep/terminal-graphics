@@ -78,8 +78,12 @@ int main() {
         std::cerr << "Failed to initialize notcurses" << std::endl;
         return -1;
     }
-    float deltaTime = 0.0f;
+    // Non-zero so the first frame's 1/deltaTime (used below to seed the FPS
+    // EMA) isn't infinite.
+    float deltaTime = 1.0f / 60.0f;
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    float smoothedFps = 0.0f;
+    const float fpsSmoothing = 0.1f; // lower = smoother/slower to react
 
     std::vector<Object> scene = loadObjs();
 
@@ -167,7 +171,10 @@ int main() {
             frameReady = true;
         }
         cv.notify_one();
-        fps.store(static_cast<int>(1.0f / deltaTime));
+        // Exponential moving average: an instantaneous 1/deltaTime readout
+        // amplifies small per-frame jitter into a distractingly noisy number.
+        smoothedFps = smoothedFps + fpsSmoothing * ((1.0f / deltaTime) - smoothedFps);
+        fps.store(static_cast<int>(smoothedFps));
 
         // Input handling
         std::vector<InputEvent> inputs;

@@ -43,9 +43,12 @@ public:
     void draw(Framebuffer& fb, Object& obj, const Camera& camera, const Light& light);
 
     // Rasterizes every triangle queued by draw() since the last flush(),
-    // splitting the framebuffer into horizontal bands processed in parallel
-    // on a persistent thread pool. Each thread only ever writes pixels in
-    // its own band, so no locking is needed on the color/depth buffers.
+    // splitting the framebuffer's rows round-robin across a persistent
+    // thread pool (row y goes to thread y % numBands). Each thread only
+    // ever writes pixels in its own row set, so no locking is needed on the
+    // color/depth buffers. Interleaving rows (instead of giving each thread
+    // one contiguous slice) keeps threads balanced even when triangle
+    // density is very uneven across screen height, e.g. sky vs. ground.
     void flush(Framebuffer& fb);
 
 private:
@@ -54,7 +57,7 @@ private:
     std::vector<Vec4> viewSpaceCache; // reused across frames to avoid reallocating every draw() call
     std::vector<ScreenTriangle> triangleBuffer; // accumulated by draw(), consumed by flush()
 
-    void rasterize_triangle(Framebuffer& fb, const ScreenTriangle& tri, int yMin, int yMax);
+    void rasterize_triangle(Framebuffer& fb, const ScreenTriangle& tri, unsigned int bandIndex, unsigned int numBands);
     Vec3 toBarycentric(const Vec4& v0, const Vec4& v1, const Vec4& v2, float x, float y);
     std::vector<ClippedTriangle> clipNearPlane(const Vec4& v0, const Vec4& v1, const Vec4& v2,
                                                 const Vec2& uv0, const Vec2& uv1, const Vec2& uv2,
@@ -62,9 +65,9 @@ private:
     RasterVertex intersect(const RasterVertex& v1, const RasterVertex& v2, float wNear);
 
     // Persistent thread pool: workers sleep between frames and wake on an
-    // epoch bump instead of being spawned/joined every frame. Band 0 is
-    // rasterized inline by whichever thread calls flush() so no core sits
-    // idle waiting on the others.
+    // epoch bump instead of being spawned/joined every frame. Band 0
+    // (rows 0, numBands, 2*numBands, ...) is rasterized inline by whichever
+    // thread calls flush() so no core sits idle waiting on the others.
     unsigned int numBands;
     std::vector<std::thread> workers;
     std::mutex poolMtx;

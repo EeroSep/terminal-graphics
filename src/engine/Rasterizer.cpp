@@ -39,19 +39,25 @@ Vec3 Rasterizer::toBarycentric(const Vec4& v0, const Vec4& v1, const Vec4& v2, f
     return Vec3(w0, w1, w2);
 }
 
-void Rasterizer::rasterize_triangle(Framebuffer& fb, const ScreenTriangle& tri, int yMin, int yMax) {
+void Rasterizer::rasterize_triangle(Framebuffer& fb, const ScreenTriangle& tri, unsigned int bandIndex, unsigned int numBands) {
     const Vec4& v0 = tri.v[0];
     const Vec4& v1 = tri.v[1];
     const Vec4& v2 = tri.v[2];
 
-    // Bounding box, clamped both to the framebuffer and to this thread's band
-    // so it never touches rows another thread owns.
+    // Bounding box, clamped to the framebuffer.
     int minx = std::max(0, (int)std::floor(std::min({v0.x, v1.x, v2.x})));
-    int miny = std::max(yMin, (int)std::floor(std::min({v0.y, v1.y, v2.y})));
+    int miny = std::max(0, (int)std::floor(std::min({v0.y, v1.y, v2.y})));
     int maxx = std::min((int)fb.getWidth() - 1, (int)std::ceil(std::max({v0.x, v1.x, v2.x})));
-    int maxy = std::min(yMax - 1, (int)std::ceil(std::max({v0.y, v1.y, v2.y})));
+    int maxy = std::min((int)fb.getHeight() - 1, (int)std::ceil(std::max({v0.y, v1.y, v2.y})));
 
-    for (int y = miny; y <= maxy; y++) {
+    // This thread only owns rows congruent to bandIndex mod numBands, so
+    // start at the first such row at or after miny and stride by numBands.
+    // Interleaving rows (instead of one contiguous slice per thread) keeps
+    // threads balanced when triangle density is uneven across screen
+    // height, e.g. a horizon line splitting sky from dense ground detail.
+    int firstRow = miny + (((int)bandIndex - miny % (int)numBands) + (int)numBands) % (int)numBands;
+
+    for (int y = firstRow; y <= maxy; y += (int)numBands) {
         for (int x = minx; x <= maxx; x++) {
             Vec3 weights = toBarycentric(v0, v1, v2, (float)x + 0.5f, (float)y + 0.5f);
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
@@ -172,14 +178,8 @@ void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera, const 
 
 void Rasterizer::rasterizeBand(unsigned int bandIndex) {
     Framebuffer& fb = *currentFb;
-    int height = (int)fb.getHeight();
-    int bandHeight = (height + (int)numBands - 1) / (int)numBands;
-    int yMin = (int)bandIndex * bandHeight;
-    int yMax = std::min(height, yMin + bandHeight);
-    if (yMin >= yMax) return;
-
     for (const ScreenTriangle& tri : triangleBuffer) {
-        rasterize_triangle(fb, tri, yMin, yMax);
+        rasterize_triangle(fb, tri, bandIndex, numBands);
     }
 }
 
