@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" role="img" aria-label="flush() wakes a thread pool that splits framebuffer rows round robin across bands, so band i always rasterizes rows i, i+4, i+8 and so on into one shared framebuffer, then all bands rejoin at a barrier before the triangle list is cleared.">
+  <defs>
+    <marker id="arrow-ink" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 8,4 0,8" fill="#12211c" fill-opacity=".7"/>
+    </marker>
+    <marker id="arrow-l0" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 8,4 0,8" fill="#044f42"/>
+    </marker>
+    <marker id="arrow-l1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 8,4 0,8" fill="#067a67"/>
+    </marker>
+    <marker id="arrow-l2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 8,4 0,8" fill="#10a98d"/>
+    </marker>
+    <marker id="arrow-l3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 8,4 0,8" fill="#57cdb3"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="620" fill="#f2f6f4"/>
+
+  <g font-family="-apple-system, 'Segoe UI', sans-serif">
+    <rect x="420" y="8" width="160" height="44" rx="4" fill="#ffffff" stroke="#12211c" stroke-width="1.6"/>
+    <text x="500" y="31" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="13" font-weight="600" fill="#12211c">flush(fb)</text>
+    <text x="500" y="66" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#57685f">epoch++ &#183; wake pool</text>
+
+    <line x1="460" y1="52" x2="160" y2="108" stroke="#044f42" stroke-opacity=".75" stroke-width="1.6" marker-end="url(#arrow-l0)"/>
+    <line x1="480" y1="52" x2="388" y2="108" stroke="#067a67" stroke-opacity=".75" stroke-width="1.6" marker-end="url(#arrow-l1)"/>
+    <line x1="520" y1="52" x2="612" y2="108" stroke="#10a98d" stroke-opacity=".75" stroke-width="1.6" marker-end="url(#arrow-l2)"/>
+    <line x1="540" y1="52" x2="840" y2="108" stroke="#57cdb3" stroke-opacity=".75" stroke-width="1.6" marker-end="url(#arrow-l3)"/>
+
+    <g>
+      <rect x="55" y="110" width="200" height="120" rx="4" fill="#e7f0ec" stroke="#cfdbd5" stroke-width="1.4"/>
+      <rect x="55" y="110" width="200" height="6" fill="#044f42"/>
+      <text x="71" y="140" font-family="ui-monospace, Menlo, monospace" font-size="13" font-weight="600" fill="#12211c">band 0</text>
+      <text x="71" y="162" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#57685f">rows 0, 4, 8, &#8230;</text>
+      <text x="71" y="182" font-size="9.5" font-weight="600" letter-spacing=".06em" fill="#57685f">FLUSH() CALLER &#183; INLINE</text>
+    </g>
+    <g>
+      <rect x="285" y="110" width="200" height="120" rx="4" fill="#e7f0ec" stroke="#cfdbd5" stroke-width="1.4"/>
+      <rect x="285" y="110" width="200" height="6" fill="#067a67"/>
+      <text x="301" y="140" font-family="ui-monospace, Menlo, monospace" font-size="13" font-weight="600" fill="#12211c">band 1</text>
+      <text x="301" y="162" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#57685f">rows 1, 5, 9, &#8230;</text>
+      <text x="301" y="182" font-size="9.5" font-weight="600" letter-spacing=".06em" fill="#57685f">WORKER THREAD</text>
+    </g>
+    <g>
+      <rect x="515" y="110" width="200" height="120" rx="4" fill="#e7f0ec" stroke="#cfdbd5" stroke-width="1.4"/>
+      <rect x="515" y="110" width="200" height="6" fill="#10a98d"/>
+      <text x="531" y="140" font-family="ui-monospace, Menlo, monospace" font-size="13" font-weight="600" fill="#12211c">band 2</text>
+      <text x="531" y="162" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#57685f">rows 2, 6, 10, &#8230;</text>
+      <text x="531" y="182" font-size="9.5" font-weight="600" letter-spacing=".06em" fill="#57685f">WORKER THREAD</text>
+    </g>
+    <g>
+      <rect x="745" y="110" width="200" height="120" rx="4" fill="#e7f0ec" stroke="#cfdbd5" stroke-width="1.4"/>
+      <rect x="745" y="110" width="200" height="6" fill="#57cdb3"/>
+      <text x="761" y="140" font-family="ui-monospace, Menlo, monospace" font-size="13" font-weight="600" fill="#12211c">band 3</text>
+      <text x="761" y="162" font-family="ui-monospace, Menlo, monospace" font-size="11" fill="#57685f">rows 3, 7, 11, &#8230;</text>
+      <text x="761" y="182" font-size="9.5" font-weight="600" letter-spacing=".06em" fill="#57685f">WORKER THREAD</text>
+    </g>
+
+    <line x1="155" y1="230" x2="155" y2="278" stroke="#044f42" stroke-opacity=".75" stroke-width="1.6" marker-end="url(#arrow-l0)"/>
+    <line x1="385" y1="230" x2="385" y2="278" stroke="#067a67" stroke-opacity=".75" stroke-width="1.6" marker-end="url(#arrow-l1)"/>
+    <line x1="615" y1="230" x2="615" y2="278" stroke="#10a98d" stroke-opacity=".75" stroke-width="1.6" marker-end="url(#arrow-l2)"/>
+    <line x1="845" y1="230" x2="845" y2="278" stroke="#57cdb3" stroke-opacity=".75" stroke-width="1.6" marker-end="url(#arrow-l3)"/>
+
+    <text x="55" y="270" font-size="10.5" fill="#57685f">framebuffer &#8212; rows colored by owning band</text>
+
+    <rect x="55" y="280" width="890" height="200" rx="4" fill="#e7f0ec" stroke="#cfdbd5" stroke-width="1.4"/>
+    <g>
+      <rect x="59" y="284" width="882" height="6" fill="#044f42"/>
+      <rect x="59" y="292" width="882" height="6" fill="#067a67"/>
+      <rect x="59" y="300" width="882" height="6" fill="#10a98d"/>
+      <rect x="59" y="308" width="882" height="6" fill="#57cdb3"/>
+      <rect x="59" y="316" width="882" height="6" fill="#044f42"/>
+      <rect x="59" y="324" width="882" height="6" fill="#067a67"/>
+      <rect x="59" y="332" width="882" height="6" fill="#10a98d"/>
+      <rect x="59" y="340" width="882" height="6" fill="#57cdb3"/>
+      <rect x="59" y="348" width="882" height="6" fill="#044f42"/>
+      <rect x="59" y="356" width="882" height="6" fill="#067a67"/>
+      <rect x="59" y="364" width="882" height="6" fill="#10a98d"/>
+      <rect x="59" y="372" width="882" height="6" fill="#57cdb3"/>
+      <rect x="59" y="380" width="882" height="6" fill="#044f42"/>
+      <rect x="59" y="388" width="882" height="6" fill="#067a67"/>
+      <rect x="59" y="396" width="882" height="6" fill="#10a98d"/>
+      <rect x="59" y="404" width="882" height="6" fill="#57cdb3"/>
+      <rect x="59" y="412" width="882" height="6" fill="#044f42"/>
+      <rect x="59" y="420" width="882" height="6" fill="#067a67"/>
+      <rect x="59" y="428" width="882" height="6" fill="#10a98d"/>
+      <rect x="59" y="436" width="882" height="6" fill="#57cdb3"/>
+      <rect x="59" y="444" width="882" height="6" fill="#044f42"/>
+      <rect x="59" y="452" width="882" height="6" fill="#067a67"/>
+      <rect x="59" y="460" width="882" height="6" fill="#10a98d"/>
+      <rect x="59" y="468" width="882" height="6" fill="#57cdb3"/>
+    </g>
+
+    <circle cx="790" cy="494" r="3.5" fill="#ad2166"/>
+    <text x="800" y="497" font-size="10.5" fill="#57685f">depth test picks the winner where rows overlap between objects</text>
+
+    <line x1="500" y1="480" x2="500" y2="508" stroke="#12211c" stroke-opacity=".55" stroke-width="1.6" marker-end="url(#arrow-ink)"/>
+    <rect x="370" y="510" width="260" height="40" rx="4" fill="#ffffff" stroke="#12211c" stroke-width="1.6"/>
+    <text x="500" y="531" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="13" font-weight="600" fill="#12211c">barrier: doneCv.wait</text>
+
+    <line x1="500" y1="550" x2="500" y2="564" stroke="#12211c" stroke-opacity=".55" stroke-width="1.6" marker-end="url(#arrow-ink)"/>
+    <rect x="370" y="566" width="260" height="40" rx="4" fill="#ffffff" stroke="#12211c" stroke-width="1.6"/>
+    <text x="500" y="587" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="13" font-weight="600" fill="#12211c">clear triangleBuffer</text>
+  </g>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 210" role="img" aria-label="The raster loop hands a finished frame to a separate render thread by flipping a double buffer and signaling frameReady, then waits for bufferFree before starting the next frame.">
+  <defs>
+    <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <polygon points="0,0 8,4 0,8" fill="#12211c" fill-opacity=".7"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="210" fill="#f2f6f4"/>
+
+  <g font-family="-apple-system, 'Segoe UI', sans-serif">
+    <line x1="500" y1="40" x2="500" y2="170" stroke="#cfdbd5" stroke-width="1.4" stroke-dasharray="4 4"/>
+    <text x="500" y="26" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="9.5" font-weight="600" letter-spacing=".08em" fill="#57685f">OS THREAD BOUNDARY</text>
+
+    <rect x="60" y="60" width="300" height="70" rx="4" fill="#ffffff" stroke="#12211c" stroke-width="1.6"/>
+    <text x="210" y="88" text-anchor="middle" font-size="13.5" font-weight="700" fill="#12211c">raster loop</text>
+    <text x="210" y="106" text-anchor="middle" font-size="10.5" fill="#57685f">(this thread)</text>
+
+    <rect x="640" y="60" width="300" height="70" rx="4" fill="#ffffff" stroke="#12211c" stroke-width="1.6"/>
+    <text x="790" y="88" text-anchor="middle" font-size="13.5" font-weight="700" fill="#12211c">render thread</text>
+    <text x="790" y="106" text-anchor="middle" font-size="10.5" fill="#57685f">(separate std::thread)</text>
+
+    <line x1="362" y1="80" x2="638" y2="80" stroke="#12211c" stroke-opacity=".55" stroke-width="1.6" marker-end="url(#arrow)"/>
+    <text x="500" y="70" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#57685f">swap buffers &#8594; frameReady=true</text>
+
+    <line x1="638" y1="112" x2="362" y2="112" stroke="#12211c" stroke-opacity=".55" stroke-width="1.6" marker-end="url(#arrow)"/>
+    <text x="500" y="128" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="10.5" fill="#57685f">bufferFree=true</text>
+
+    <line x1="790" y1="130" x2="790" y2="158" stroke="#12211c" stroke-opacity=".55" stroke-width="1.6" marker-end="url(#arrow)"/>
+    <rect x="700" y="160" width="180" height="36" rx="4" fill="#ffffff" stroke="#12211c" stroke-width="1.6"/>
+    <text x="790" y="180" text-anchor="middle" font-size="12.5" font-weight="600" fill="#12211c">terminal (notcurses)</text>
+  </g>
+</svg>
