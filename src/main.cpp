@@ -146,6 +146,9 @@ int main() {
         for (Object& obj : scene) {
             rasterizer.draw(framebuffer, obj, camera, light);
         }
+        // Rasterizes every triangle queued above across the thread pool,
+        // then clears the queue for the next frame.
+        rasterizer.flush(framebuffer);
 
         {
             std::unique_lock<std::mutex> lock(mtx);

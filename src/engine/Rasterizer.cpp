@@ -9,35 +9,47 @@
 #include <iostream>
 
 Rasterizer::Rasterizer() {
-
+    numBands = std::max(1u, std::thread::hardware_concurrency());
+    // Band 0 is processed inline by whoever calls flush(); only spawn
+    // workers for the remaining bands so no core is left purely waiting.
+    for (unsigned int i = 1; i < numBands; i++) {
+        workers.emplace_back(&Rasterizer::workerLoop, this, i);
+    }
 }
 
 Rasterizer::~Rasterizer() {
-    
+    {
+        std::lock_guard<std::mutex> lock(poolMtx);
+        stop = true;
+        epoch++;
+    }
+    startCv.notify_all();
+    for (std::thread& t : workers) t.join();
 }
 
 Vec3 Rasterizer::toBarycentric(const Vec4& v0, const Vec4& v1, const Vec4& v2, float x, float y) {
     float det = (v1.y - v2.y) * (v0.x - v2.x) + (v2.x - v1.x) * (v0.y - v2.y);
 
-    if (std::abs(det) < 0.00001f) return Vec3(-1, -1, -1); 
+    if (std::abs(det) < 0.00001f) return Vec3(-1, -1, -1);
 
     float w0 = ((v1.y - v2.y) * (x - v2.x) + (v2.x - v1.x) * (y - v2.y)) / det;
     float w1 = ((v2.y - v0.y) * (x - v2.x) + (v0.x - v2.x) * (y - v2.y)) / det;
     float w2 = 1.0f - w0 - w1;
 
-    return Vec3(w0, w1, w2);   
+    return Vec3(w0, w1, w2);
 }
 
-void Rasterizer::rasterize_triangle(Framebuffer& fb, const Vec4& v0, const Vec4& v1, const Vec4& v2,
-                                     float invW0, float invW1, float invW2,
-                                     const Vec2& uv0, const Vec2& uv1, const Vec2& uv2,
-                                     uint32_t flatColor, const Texture* texture, float shade) {
-    // Bounding box
-    int minx = std::max(0, (int)std::floor(std::min({v0.x, v1.x, v2.x})));
-    int miny = std::max(0, (int)std::floor(std::min({v0.y, v1.y, v2.y})));
-    int maxx = std::min((int)fb.getWidth() - 1, (int)std::ceil(std::max({v0.x, v1.x, v2.x})));
-    int maxy = std::min((int)fb.getHeight() - 1, (int)std::ceil(std::max({v0.y, v1.y, v2.y})));
+void Rasterizer::rasterize_triangle(Framebuffer& fb, const ScreenTriangle& tri, int yMin, int yMax) {
+    const Vec4& v0 = tri.v[0];
+    const Vec4& v1 = tri.v[1];
+    const Vec4& v2 = tri.v[2];
 
+    // Bounding box, clamped both to the framebuffer and to this thread's band
+    // so it never touches rows another thread owns.
+    int minx = std::max(0, (int)std::floor(std::min({v0.x, v1.x, v2.x})));
+    int miny = std::max(yMin, (int)std::floor(std::min({v0.y, v1.y, v2.y})));
+    int maxx = std::min((int)fb.getWidth() - 1, (int)std::ceil(std::max({v0.x, v1.x, v2.x})));
+    int maxy = std::min(yMax - 1, (int)std::ceil(std::max({v0.y, v1.y, v2.y})));
 
     for (int y = miny; y <= maxy; y++) {
         for (int x = minx; x <= maxx; x++) {
@@ -45,16 +57,16 @@ void Rasterizer::rasterize_triangle(Framebuffer& fb, const Vec4& v0, const Vec4&
             if (weights.x >= 0 && weights.y >= 0 && weights.z >= 0) {
                 float depth = weights.x * v0.z + weights.y * v1.z + weights.z * v2.z;
 
-                uint32_t color = flatColor;
-                if (texture) {
+                uint32_t color = tri.color;
+                if (tri.texture) {
                     // Perspective-correct interpolation: UVs (and 1/w itself) are
                     // linear in screen space only after dividing by w, so interpolate
                     // uv/w and 1/w linearly, then recover uv by dividing back out.
-                    float invW = weights.x * invW0 + weights.y * invW1 + weights.z * invW2;
-                    float u = (weights.x * uv0.x * invW0 + weights.y * uv1.x * invW1 + weights.z * uv2.x * invW2) / invW;
-                    float v = (weights.x * uv0.y * invW0 + weights.y * uv1.y * invW1 + weights.z * uv2.y * invW2) / invW;
+                    float invW = weights.x * tri.invW[0] + weights.y * tri.invW[1] + weights.z * tri.invW[2];
+                    float u = (weights.x * tri.uv[0].x * tri.invW[0] + weights.y * tri.uv[1].x * tri.invW[1] + weights.z * tri.uv[2].x * tri.invW[2]) / invW;
+                    float v = (weights.x * tri.uv[0].y * tri.invW[0] + weights.y * tri.uv[1].y * tri.invW[1] + weights.z * tri.uv[2].y * tri.invW[2]) / invW;
 
-                    Vec3 shaded = texture->sample(u, v) * shade;
+                    Vec3 shaded = tri.texture->sample(u, v) * tri.shade;
                     color = Colors::rgba(
                         static_cast<uint8_t>(std::clamp(shaded.x, 0.0f, 1.0f) * 255.0f),
                         static_cast<uint8_t>(std::clamp(shaded.y, 0.0f, 1.0f) * 255.0f),
@@ -129,26 +141,90 @@ void Rasterizer::draw(Framebuffer& fb, Object& obj, const Camera& camera, const 
             continue;
         }
 
-        // Clip against near plane and rasterize
+        // Clip against near plane and queue the resulting screen-space
+        // triangles; the actual pixel writes happen later in flush().
         std::vector<ClippedTriangle> tris = clipNearPlane(v0, v1, v2, face.uv[0], face.uv[1], face.uv[2], color, texture, shade);
         if (tris.empty()) continue;
         for (ClippedTriangle& tri : tris) {
             // w before ndc() is the clip-space w (== view-space -z); its reciprocal
             // is what perspective-correct UV interpolation needs, so it must be
             // captured before ndc() overwrites w with 1.
-            float invW0 = 1.0f / tri.v[0].w;
-            float invW1 = 1.0f / tri.v[1].w;
-            float invW2 = 1.0f / tri.v[2].w;
+            ScreenTriangle st;
+            st.invW[0] = 1.0f / tri.v[0].w;
+            st.invW[1] = 1.0f / tri.v[1].w;
+            st.invW[2] = 1.0f / tri.v[2].w;
             tri.v[0].ndc();
             tri.v[1].ndc();
             tri.v[2].ndc();
-            tri.v[0] = vp * tri.v[0];
-            tri.v[1] = vp * tri.v[1];
-            tri.v[2] = vp * tri.v[2];
-            rasterize_triangle(fb, tri.v[0], tri.v[1], tri.v[2], invW0, invW1, invW2,
-                                tri.uv[0], tri.uv[1], tri.uv[2], tri.color, tri.texture, tri.shade);
+            st.v[0] = vp * tri.v[0];
+            st.v[1] = vp * tri.v[1];
+            st.v[2] = vp * tri.v[2];
+            st.uv[0] = tri.uv[0];
+            st.uv[1] = tri.uv[1];
+            st.uv[2] = tri.uv[2];
+            st.color = tri.color;
+            st.texture = tri.texture;
+            st.shade = tri.shade;
+            triangleBuffer.push_back(st);
         }
     }
+}
+
+void Rasterizer::rasterizeBand(unsigned int bandIndex) {
+    Framebuffer& fb = *currentFb;
+    int height = (int)fb.getHeight();
+    int bandHeight = (height + (int)numBands - 1) / (int)numBands;
+    int yMin = (int)bandIndex * bandHeight;
+    int yMax = std::min(height, yMin + bandHeight);
+    if (yMin >= yMax) return;
+
+    for (const ScreenTriangle& tri : triangleBuffer) {
+        rasterize_triangle(fb, tri, yMin, yMax);
+    }
+}
+
+void Rasterizer::workerLoop(unsigned int bandIndex) {
+    unsigned int seenEpoch = 0;
+    while (true) {
+        std::unique_lock<std::mutex> lock(poolMtx);
+        startCv.wait(lock, [&] { return stop || epoch != seenEpoch; });
+        if (stop) return;
+        seenEpoch = epoch;
+        lock.unlock();
+
+        rasterizeBand(bandIndex);
+
+        {
+            std::lock_guard<std::mutex> lock2(poolMtx);
+            workersDone++;
+        }
+        doneCv.notify_one();
+    }
+}
+
+void Rasterizer::flush(Framebuffer& fb) {
+    currentFb = &fb;
+    unsigned int numWorkers = numBands - 1;
+
+    if (numWorkers > 0) {
+        {
+            std::lock_guard<std::mutex> lock(poolMtx);
+            workersDone = 0;
+            epoch++;
+        }
+        startCv.notify_all();
+    }
+
+    // The flushing thread does band 0 itself instead of idling while the
+    // pool works, so all cores (including this one) stay busy.
+    rasterizeBand(0);
+
+    if (numWorkers > 0) {
+        std::unique_lock<std::mutex> lock(poolMtx);
+        doneCv.wait(lock, [&] { return workersDone == numWorkers; });
+    }
+
+    triangleBuffer.clear();
 }
 
 std::vector<ClippedTriangle> Rasterizer::clipNearPlane(const Vec4& v0, const Vec4& v1, const Vec4& v2,
