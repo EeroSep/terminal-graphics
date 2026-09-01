@@ -26,6 +26,8 @@ add_executable(terminal_graphics
     src/engine/Renderer.cpp
     src/engine/Texture.cpp
     src/external/stb_image_impl.cpp
+    src/game/FlyCam.cpp
+    src/game/Player.cpp
 )
 
 # ---- Include directories ----
@@ -35,6 +37,7 @@ target_include_directories(terminal_graphics PRIVATE
     src/engine
     src/utility
     src/external
+    src/game
 )
 
 # ---- Link libraries ----

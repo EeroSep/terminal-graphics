@@ -2,13 +2,14 @@
 #include <notcurses/notcurses.h>
 #include <vector>
 
-InputHandler::InputHandler(struct notcurses* nc) : nc(nc) {
+InputHandler::InputHandler(struct notcurses* nc, std::mutex& ncMutex) : nc(nc), ncMutex(ncMutex) {
     notcurses_mice_enable(nc, NCMICE_ALL_EVENTS);
 }
 
 InputHandler::~InputHandler() {}
 
 std::vector<InputEvent> InputHandler::processInput() {
+    std::lock_guard<std::mutex> lock(ncMutex);
     std::vector<InputEvent> inputs;
     struct ncinput ni;
     struct timespec ts = { .tv_sec = 0, .tv_nsec = 0};
