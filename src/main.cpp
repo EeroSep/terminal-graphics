@@ -17,6 +17,8 @@
 #include "engine/InputHandler.h"
 #include "engine/Light.h"
 #include "utility/Colors.h"
+#include "game/FlyCam.h"
+#include "game/Player.h"
 
 std::vector<Object> loadObjs() {
     //Hardcoded cube :D
@@ -66,7 +68,7 @@ std::vector<Object> loadObjs() {
     objects.push_back(teapot);
     Object map = Object::loadFromFile("assets/map.obj", Colors::white);
     map.rotate(0.0f, 0.0f, -1.5707963f); // 90 degrees, in radians
-    map.scaleObject(150.0f, 150.0f, 150.0f);
+    map.scaleObject(50.0f, 50.0f, 50.0f);
     objects.push_back(map);
     return objects;
 }
@@ -78,17 +80,26 @@ int main() {
         std::cerr << "Failed to initialize notcurses" << std::endl;
         return -1;
     }
-    float deltaTime = 0.0f;
+    // Non-zero so the first frame's 1/deltaTime (used below to seed the FPS
+    // EMA) isn't infinite.
+    float deltaTime = 1.0f / 60.0f;
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
+    float smoothedFps = 0.0f;
+    const float fpsSmoothing = 0.1f; // lower = smoother/slower to react
 
     std::vector<Object> scene = loadObjs();
 
-    Renderer renderer(nc);
+    // notcurses itself isn't safe to call concurrently from two threads on
+    // the same context, so Renderer and InputHandler each lock this around
+    // their own notcurses calls (render()/checkTermSize() vs processInput()).
+    std::mutex ncMutex;
+
+    Renderer renderer(nc, ncMutex);
 
     // Setting size from renderer
     Framebuffer framebuffer(renderer.getWidth(), renderer.getHeight());
     framebuffer.setClearColor(Colors::rgba(135, 206, 235, 255)); // sky blue
-    framebuffer.setClearColor(Colors::black); 
+    //framebuffer.setClearColor(Colors::black); 
     Rasterizer rasterizer;
 
     // Create camera in origin with 90 fov and aspect ratio from renderer
@@ -100,9 +111,13 @@ int main() {
 
     Light light(Vec3(0.4f, 1.0f, 0.3f));
 
-    InputHandler inputHandler(nc);
+    InputHandler inputHandler(nc, ncMutex);
     bool resizeFlag = false;
-    int lastMouseX = -1, lastMouseY = -1;
+    // FlyCam flyCam(Vec3(0, 0, 0), camera, inputHandler);
+    // loadObjs() always pushes the map last; spawn a couple units up so
+    // gravity settles the player onto the floor instead of starting embedded
+    // in it if y=0 isn't exactly ground level.
+    Player player(Vec3(5, -8.0f, 5), camera, inputHandler, scene.back());
 
     // Handoff between the raster thread (this loop) and the render thread below.
     // frameReady: raster has swapped a finished frame into the front buffer, render should pick it up.
@@ -113,12 +128,6 @@ int main() {
     bool bufferFree = true;
     std::atomic<int> fps{0};
 
-    // notcurses itself isn't safe to call concurrently from two threads on the
-    // same context: render(), checkTermSize() and processInput() all touch
-    // internal notcurses state, so they need to be mutually exclusive even
-    // though they don't share any of our own data structures.
-    std::mutex ncMutex;
-
     std::thread renderThread([&]() {
         while (true) {
             std::unique_lock<std::mutex> lock(mtx);
@@ -126,10 +135,7 @@ int main() {
             frameReady = false;
             lock.unlock();
 
-            {
-                std::lock_guard<std::mutex> ncLock(ncMutex);
-                renderer.render(&framebuffer, fps.load());
-            }
+            renderer.render(&framebuffer, fps.load());
 
             {
                 std::lock_guard<std::mutex> lock2(mtx);
@@ -146,15 +152,14 @@ int main() {
         for (Object& obj : scene) {
             rasterizer.draw(framebuffer, obj, camera, light);
         }
+        // Rasterizes every triangle queued above across the thread pool,
+        // then clears the queue for the next frame.
+        rasterizer.flush(framebuffer);
 
         {
             std::unique_lock<std::mutex> lock(mtx);
             cv.wait(lock, [&] { return bufferFree; });
-            bool resized;
-            {
-                std::lock_guard<std::mutex> ncLock(ncMutex);
-                resized = renderer.checkTermSize();
-            }
+            bool resized = renderer.checkTermSize();
             if (resized) {
                 framebuffer.resize(renderer.getWidth(), renderer.getHeight());
                 camera.setAspectRatio(static_cast<float>(renderer.getWidth()) / static_cast<float>(renderer.getHeight()));
@@ -164,60 +169,15 @@ int main() {
             frameReady = true;
         }
         cv.notify_one();
-        fps.store(static_cast<int>(1.0f / deltaTime));
+        // Exponential moving average: an instantaneous 1/deltaTime readout
+        // amplifies small per-frame jitter into a distractingly noisy number.
+        smoothedFps = smoothedFps + fpsSmoothing * ((1.0f / deltaTime) - smoothedFps);
+        fps.store(static_cast<int>(smoothedFps));
 
         // Input handling
-        std::vector<InputEvent> inputs;
-        {
-            std::lock_guard<std::mutex> ncLock(ncMutex);
-            inputs = inputHandler.processInput();
-        }
-        for (const InputEvent& inputEvent : inputs) {
-            uint32_t input = inputEvent.input;
-            if (nckey_mouse_p(input)) {
-                if (inputEvent.type == NCTYPE_PRESS) {
-                    if (lastMouseX != -1 && lastMouseY != -1) { // take delta when dragging
-                        int deltaX = inputEvent.x - lastMouseX;
-                        int deltaY = inputEvent.y - lastMouseY;
-                        camera.rotate(deltaX * deltaTime, -deltaY * deltaTime * 2.0f);
-                    }
-                    lastMouseX = inputEvent.x;
-                    lastMouseY = inputEvent.y;
-                } else if (inputEvent.type == NCTYPE_RELEASE) { // resest last mouse position on release to avoid jumps
-                    lastMouseX = -1;
-                    lastMouseY = -1;
-                }
-            }
-            switch (input) { // Very nice input handling, will refactor later
-                case NCKEY_UP:
-                    camera.rotate(0.0f, 1.0f * deltaTime);
-                    break;
-                case NCKEY_DOWN:
-                    camera.rotate(0.0f, -1.0f * deltaTime);
-                    break;
-                case NCKEY_LEFT:
-                    camera.rotate(-1.0f * deltaTime, 0.0f);
-                    break;
-                case NCKEY_RIGHT:
-                    camera.rotate(1.0f * deltaTime, 0.0f);
-                    break;
-                case 'w':
-                    camera.move(1.0f * deltaTime, 0.0f, 0.0f);
-                    break;
-                case 's':
-                    camera.move(-1.0f * deltaTime, 0.0f, 0.0f);
-                    break;
-                case 'a':
-                    camera.move(0.0f, -1.0f * deltaTime, 0.0f);
-                    break;
-                case 'd':
-                    camera.move(0.0f, 1.0f * deltaTime, 0.0f);
-                    break;
-                default:
-                    break;
-            }
-            
-        }
+        // flyCam.update();
+        player.update(deltaTime);
+
         auto now = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration<float>(now - lastFrameTime).count();
         lastFrameTime = now;

@@ -14,6 +14,11 @@ public:
     void rotate(float x, float y);
     void move(float forw, float lateral, float vertical);
 
+    // Yaw alone (no pitch) gives a ground-plane facing direction, e.g. for a
+    // walking character that shouldn't move up/down just because the camera
+    // is looking up/down.
+    float getYaw() const { return yaw; }
+
     Mat4 getViewMatrix() const;
     Mat4 getProjectionMatrix() const;
 private:

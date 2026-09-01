@@ -1,7 +1,7 @@
 #include "Renderer.h"
 #include <notcurses/notcurses.h>
 
-Renderer::Renderer(struct notcurses* nc) : nc(nc) {
+Renderer::Renderer(struct notcurses* nc, std::mutex& ncMutex) : nc(nc), ncMutex(ncMutex) {
 
     notcurses_term_dim_yx(nc, &term_height, &term_width);
     blit = NCBLIT_3x2;
@@ -25,6 +25,7 @@ void Renderer::clear() {
     ncplane_erase(ui);
 }
 void Renderer::render(const Framebuffer* fb, const int fps) {
+    std::lock_guard<std::mutex> lock(ncMutex);
     if (!fb || !fb->getColorBuffer()) return;
     ncvisual_options vopts{}; 
     vopts.n = game;
@@ -50,6 +51,7 @@ void Renderer::render(const Framebuffer* fb, const int fps) {
 }
 
 bool Renderer::checkTermSize() {
+    std::lock_guard<std::mutex> lock(ncMutex);
     unsigned int new_width, new_height;
     notcurses_term_dim_yx(nc, &new_height, &new_width);
     if (new_width != term_width || new_height != term_height) {
